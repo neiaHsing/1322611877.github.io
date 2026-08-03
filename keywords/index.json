@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-08-03T05:44:02.208Z",
-  "postCount": 47,
-  "keywordCount": 347,
+  "generatedAt": "2026-08-03T06:16:02.549Z",
+  "postCount": 48,
+  "keywordCount": 353,
   "keywords": [
     {
       "name": "城市",
@@ -1093,6 +1093,17 @@
       ]
     },
     {
+      "name": "动机",
+      "count": 1,
+      "posts": [
+        {
+          "title": "善良的动机-motivation of kindness",
+          "url": "/2026/08/02/motivation-of-kindness/",
+          "date": "2026-08-02T08:23:23.000Z"
+        }
+      ]
+    },
+    {
       "name": "读书笔记",
       "count": 1,
       "posts": [
@@ -1929,6 +1940,17 @@
       ]
     },
     {
+      "name": "阶段",
+      "count": 1,
+      "posts": [
+        {
+          "title": "善良的动机-motivation of kindness",
+          "url": "/2026/08/02/motivation-of-kindness/",
+          "date": "2026-08-02T08:23:23.000Z"
+        }
+      ]
+    },
+    {
       "name": "金融小镇",
       "count": 1,
       "posts": [
@@ -2640,6 +2662,17 @@
           "title": "游记(粤东-南宁-香港",
           "url": "/2025/08/07/游记-粤东-南宁-香港/",
           "date": "2025-08-07T14:32:33.000Z"
+        }
+      ]
+    },
+    {
+      "name": "善良",
+      "count": 1,
+      "posts": [
+        {
+          "title": "善良的动机-motivation of kindness",
+          "url": "/2026/08/02/motivation-of-kindness/",
+          "date": "2026-08-02T08:23:23.000Z"
         }
       ]
     },
@@ -3458,6 +3491,17 @@
       ]
     },
     {
+      "name": "意识",
+      "count": 1,
+      "posts": [
+        {
+          "title": "善良的动机-motivation of kindness",
+          "url": "/2026/08/02/motivation-of-kindness/",
+          "date": "2026-08-02T08:23:23.000Z"
+        }
+      ]
+    },
+    {
       "name": "游戏",
       "count": 1,
       "posts": [
@@ -3777,6 +3821,17 @@
       ]
     },
     {
+      "name": "kindness",
+      "count": 1,
+      "posts": [
+        {
+          "title": "善良的动机-motivation of kindness",
+          "url": "/2026/08/02/motivation-of-kindness/",
+          "date": "2026-08-02T08:23:23.000Z"
+        }
+      ]
+    },
+    {
       "name": "Markdown",
       "count": 1,
       "posts": [
@@ -3795,6 +3850,17 @@
           "title": "HomePod mini进入DFU无法刷机问题解决",
           "url": "/2024/03/07/HomePod-mini进入DFU无法刷机问题解决/",
           "date": "2024-03-07T12:18:51.000Z"
+        }
+      ]
+    },
+    {
+      "name": "motivation",
+      "count": 1,
+      "posts": [
+        {
+          "title": "善良的动机-motivation of kindness",
+          "url": "/2026/08/02/motivation-of-kindness/",
+          "date": "2026-08-02T08:23:23.000Z"
         }
       ]
     },
@@ -3932,6 +3998,19 @@
     }
   ],
   "posts": [
+    {
+      "title": "善良的动机-motivation of kindness",
+      "url": "/2026/08/02/motivation-of-kindness/",
+      "date": "2026-08-02T08:23:23.000Z",
+      "keywords": [
+        "善良",
+        "动机",
+        "motivation",
+        "kindness",
+        "阶段",
+        "意识"
+      ]
+    },
     {
       "title": "游记(陕西西安",
       "url": "/2025/10/30/游记-陕西西安 /",
