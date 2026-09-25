@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-09-25T09:58:12.558Z",
-  "postCount": 48,
-  "keywordCount": 353,
+  "generatedAt": "2026-09-25T09:58:45.081Z",
+  "postCount": 49,
+  "keywordCount": 361,
   "keywords": [
     {
       "name": "城市",
@@ -172,14 +172,14 @@
       "count": 2,
       "posts": [
         {
-          "title": "Some Thoughts in March",
-          "url": "/2025/04/08/Some-Thoughts-in-March/",
-          "date": "2025-04-08T18:21:01.000Z"
-        },
-        {
           "title": "Some Thoughts in April\u0026May",
           "url": "/2025/06/01/Some-Thoughts-in-April-May/",
           "date": "2025-06-01T18:49:39.000Z"
+        },
+        {
+          "title": "Some Thoughts in March",
+          "url": "/2025/04/08/Some-Thoughts-in-March/",
+          "date": "2025-04-08T18:21:01.000Z"
         }
       ]
     },
@@ -2490,6 +2490,17 @@
       ]
     },
     {
+      "name": "嵌入式",
+      "count": 1,
+      "posts": [
+        {
+          "title": "做一块 CRSF 转 PWM 小板",
+          "url": "/2026/09/25/做一块 CRSF 转 PWM 小板-1790329128057/",
+          "date": "2026-09-25T09:37:50.000Z"
+        }
+      ]
+    },
+    {
       "name": "寝室",
       "count": 1,
       "posts": [
@@ -3249,6 +3260,17 @@
       ]
     },
     {
+      "name": "小板",
+      "count": 1,
+      "posts": [
+        {
+          "title": "做一块 CRSF 转 PWM 小板",
+          "url": "/2026/09/25/做一块 CRSF 转 PWM 小板-1790329128057/",
+          "date": "2026-09-25T09:37:50.000Z"
+        }
+      ]
+    },
+    {
       "name": "小笼包",
       "count": 1,
       "posts": [
@@ -3788,6 +3810,17 @@
       ]
     },
     {
+      "name": "做一块",
+      "count": 1,
+      "posts": [
+        {
+          "title": "做一块 CRSF 转 PWM 小板",
+          "url": "/2026/09/25/做一块 CRSF 转 PWM 小板-1790329128057/",
+          "date": "2026-09-25T09:37:50.000Z"
+        }
+      ]
+    },
+    {
       "name": "April May",
       "count": 1,
       "posts": [
@@ -3795,6 +3828,50 @@
           "title": "Some Thoughts in April\u0026May",
           "url": "/2025/06/01/Some-Thoughts-in-April-May/",
           "date": "2025-06-01T18:49:39.000Z"
+        }
+      ]
+    },
+    {
+      "name": "Arduino",
+      "count": 1,
+      "posts": [
+        {
+          "title": "做一块 CRSF 转 PWM 小板",
+          "url": "/2026/09/25/做一块 CRSF 转 PWM 小板-1790329128057/",
+          "date": "2026-09-25T09:37:50.000Z"
+        }
+      ]
+    },
+    {
+      "name": "CRSF",
+      "count": 1,
+      "posts": [
+        {
+          "title": "做一块 CRSF 转 PWM 小板",
+          "url": "/2026/09/25/做一块 CRSF 转 PWM 小板-1790329128057/",
+          "date": "2026-09-25T09:37:50.000Z"
+        }
+      ]
+    },
+    {
+      "name": "CRSF PWM",
+      "count": 1,
+      "posts": [
+        {
+          "title": "做一块 CRSF 转 PWM 小板",
+          "url": "/2026/09/25/做一块 CRSF 转 PWM 小板-1790329128057/",
+          "date": "2026-09-25T09:37:50.000Z"
+        }
+      ]
+    },
+    {
+      "name": "ELRS",
+      "count": 1,
+      "posts": [
+        {
+          "title": "做一块 CRSF 转 PWM 小板",
+          "url": "/2026/09/25/做一块 CRSF 转 PWM 小板-1790329128057/",
+          "date": "2026-09-25T09:37:50.000Z"
         }
       ]
     },
@@ -3894,6 +3971,17 @@
           "title": "周记(12.12-12.19):淳安千岛湖",
           "url": "/2023/12/19/周记-12-12-12-19-淳安千岛湖/",
           "date": "2023-12-19T11:11:37.000Z"
+        }
+      ]
+    },
+    {
+      "name": "PWM",
+      "count": 1,
+      "posts": [
+        {
+          "title": "做一块 CRSF 转 PWM 小板",
+          "url": "/2026/09/25/做一块 CRSF 转 PWM 小板-1790329128057/",
+          "date": "2026-09-25T09:37:50.000Z"
         }
       ]
     },
@@ -3998,6 +4086,21 @@
     }
   ],
   "posts": [
+    {
+      "title": "做一块 CRSF 转 PWM 小板",
+      "url": "/2026/09/25/做一块 CRSF 转 PWM 小板-1790329128057/",
+      "date": "2026-09-25T09:37:50.000Z",
+      "keywords": [
+        "PWM",
+        "CRSF",
+        "Arduino",
+        "嵌入式",
+        "ELRS",
+        "做一块",
+        "CRSF PWM",
+        "小板"
+      ]
+    },
     {
       "title": "善良的动机-motivation of kindness",
       "url": "/2026/08/02/motivation-of-kindness/",

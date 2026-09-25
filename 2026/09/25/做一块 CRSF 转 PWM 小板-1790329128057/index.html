@@ -1,0 +1,392 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><script>(function(){if(['localhost','127.0.0.1','[::1]'].indexOf(location.hostname)!==-1)return;if(location.protocol==='http:'){var url=new URL(location.href);url.protocol='https:';location.replace(url.href);}var policy=document.createElement('meta');policy.httpEquiv='Content-Security-Policy';policy.content='upgrade-insecure-requests';document.head.appendChild(policy);})();</script><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>做一块 CRSF 转 PWM 小板 | Xiaoeni's Blog</title><meta name="author" content="Xiaoeni"><meta name="copyright" content="Xiaoeni"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#F4F7FB"><meta name="description" content="做一块 CRSF 转 PWM 小板我想做一块小板，把 ELRS 接收机的 CRSF 串口数据转成舵机、电调能用的 PWM 信号。接收机负责无线通信，小板负责解包和输出. 单看功能，这个工程确实不大。真正需要花时间的地方，藏在几个看起来已经解决的问题里：串口能收到数据，还得知道从哪里开始算一帧；通道值能变成脉宽，还得考虑失联以后继续输出什么。这次整理时，完整程序能在一套配置下编译通过，换成目标芯片的">
+<meta property="og:type" content="article">
+<meta property="og:title" content="做一块 CRSF 转 PWM 小板">
+<meta property="og:url" content="https://www.xiaoeni.cc/2026/09/25/%E5%81%9A%E4%B8%80%E5%9D%97%20CRSF%20%E8%BD%AC%20PWM%20%E5%B0%8F%E6%9D%BF-1790329128057/index.html">
+<meta property="og:site_name" content="Xiaoeni&#39;s Blog">
+<meta property="og:description" content="做一块 CRSF 转 PWM 小板我想做一块小板，把 ELRS 接收机的 CRSF 串口数据转成舵机、电调能用的 PWM 信号。接收机负责无线通信，小板负责解包和输出. 单看功能，这个工程确实不大。真正需要花时间的地方，藏在几个看起来已经解决的问题里：串口能收到数据，还得知道从哪里开始算一帧；通道值能变成脉宽，还得考虑失联以后继续输出什么。这次整理时，完整程序能在一套配置下编译通过，换成目标芯片的">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://www.xiaoeni.cc/img/og.png">
+<meta property="article:published_time" content="2026-09-25T09:37:50.000Z">
+<meta property="article:modified_time" content="2026-09-25T09:58:31.280Z">
+<meta property="article:author" content="Xiaoeni">
+<meta property="article:tag" content="嵌入式">
+<meta property="article:tag" content="ELRS">
+<meta property="article:tag" content="CRSF">
+<meta property="article:tag" content="PWM">
+<meta property="article:tag" content="Arduino">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://www.xiaoeni.cc/img/og.png"><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="https://www.xiaoeni.cc/2026/09/25/%E5%81%9A%E4%B8%80%E5%9D%97%20CRSF%20%E8%BD%AC%20PWM%20%E5%B0%8F%E6%9D%BF-1790329128057/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//www.google-analytics.com" crossorigin=""/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script async="async" src="https://www.googletagmanager.com/gtag/js?id=G-N8GN2LL7VE"></script><script>window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-N8GN2LL7VE');
+</script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: {"defaultEncoding":2,"translateDelay":0,"msgToTraditionalChinese":"繁","msgToSimplifiedChinese":"簡"},
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlighjs","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: true,
+  },
+  autoDarkmode: true
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '做一块 CRSF 转 PWM 小板',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2026-09-25 17:58:31'
+}</script><script>(win=>{
+      win.saveToLocal = {
+        set: (key, value, ttl) => {
+          if (ttl === 0) return
+          const now = Date.now()
+          const expiry = now + ttl * 86400000
+          const item = {
+            value,
+            expiry
+          }
+          localStorage.setItem(key, JSON.stringify(item))
+        },
+      
+        get: key => {
+          const itemStr = localStorage.getItem(key)
+      
+          if (!itemStr) {
+            return undefined
+          }
+          const item = JSON.parse(itemStr)
+          const now = Date.now()
+      
+          if (now > item.expiry) {
+            localStorage.removeItem(key)
+            return undefined
+          }
+          return item.value
+        }
+      }
+    
+      win.getScript = (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        script.onerror = reject
+        script.onload = script.onreadystatechange = function() {
+          const loadState = this.readyState
+          if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+          script.onload = script.onreadystatechange = null
+          resolve()
+        }
+
+        Object.keys(attr).forEach(key => {
+          script.setAttribute(key, attr[key])
+        })
+
+        document.head.appendChild(script)
+      })
+    
+      win.getCSS = (url, id = false) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onerror = reject
+        link.onload = link.onreadystatechange = function() {
+          const loadState = this.readyState
+          if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+          link.onload = link.onreadystatechange = null
+          resolve()
+        }
+        document.head.appendChild(link)
+      })
+    
+      win.activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0F1420')
+        }
+      }
+      win.activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#F4F7FB')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches
+          const isLightMode = window.matchMedia('(prefers-color-scheme: light)').matches
+          const isNotSpecified = window.matchMedia('(prefers-color-scheme: no-preference)').matches
+          const hasNoSupport = !isDarkMode && !isLightMode && !isNotSpecified
+
+          if (t === undefined) {
+            if (isLightMode) activateLightMode()
+            else if (isDarkMode) activateDarkMode()
+            else if (isNotSpecified || hasNoSupport) {
+              const now = new Date()
+              const hour = now.getHours()
+              const isNight = hour <= 6 || hour >= 18
+              isNight ? activateDarkMode() : activateLightMode()
+            }
+            window.matchMedia('(prefers-color-scheme: dark)').addListener(e => {
+              if (saveToLocal.get('theme') === undefined) {
+                e.matches ? activateDarkMode() : activateLightMode()
+              }
+            })
+          } else if (t === 'light') activateLightMode()
+          else activateDarkMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+      const detectApple = () => {
+        if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+          document.documentElement.classList.add('apple')
+        }
+      }
+      detectApple()
+    })(window)</script><link rel="stylesheet" href="/css/custom.css"><meta name="generator" content="Hexo 6.3.0">  <meta name="keywords" content="PWM, CRSF, Arduino, 嵌入式, ELRS, 做一块, CRSF PWM, 小板">
+</head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="https://s2.loli.net/2023/11/17/4iJRQMFrfAGenSo.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">49</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">5</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">1</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/keywords/"><i class="fa-fw fas fa-compass"></i><span> 关键词</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg fixed" id="page-header" style="background: linear-gradient(135deg, #172033 0%, #29446b 52%, #4f6fdf 100%)"><nav id="nav"><span id="blog-info"><a href="/" title="Xiaoeni's Blog"><span class="site-name">Xiaoeni's Blog</span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/keywords/"><i class="fa-fw fas fa-compass"></i><span> 关键词</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">做一块 CRSF 转 PWM 小板</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-09-25T09:37:50.000Z" title="发表于 2026-09-25 17:37:50">2026-09-25</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-09-25T09:58:31.280Z" title="更新于 2026-09-25 17:58:31">2026-09-25</time></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span id="" data-flag-title="做一块 CRSF 转 PWM 小板"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">阅读量:</span><span id="twikoo_visitors"><i class="fa-solid fa-spinner fa-spin"></i></span></span><span class="post-meta-separator">|</span><span class="post-meta-commentcount"><i class="far fa-comments fa-fw post-meta-icon"></i><span class="post-meta-label">评论数:</span><a href="/2026/09/25/%E5%81%9A%E4%B8%80%E5%9D%97%20CRSF%20%E8%BD%AC%20PWM%20%E5%B0%8F%E6%9D%BF-1790329128057/#post-comment"><span id="twikoo-count"><i class="fa-solid fa-spinner fa-spin"></i></span></a></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><h1 id="做一块-CRSF-转-PWM-小板"><a href="#做一块-CRSF-转-PWM-小板" class="headerlink" title="做一块 CRSF 转 PWM 小板"></a>做一块 CRSF 转 PWM 小板</h1><p>我想做一块小板，把 ELRS 接收机的 CRSF 串口数据转成舵机、电调能用的 PWM 信号。接收机负责无线通信，小板负责解包和输出.</p>
+<p>单看功能，这个工程确实不大。真正需要花时间的地方，藏在几个看起来已经解决的问题里：串口能收到数据，还得知道从哪里开始算一帧；通道值能变成脉宽，还得考虑失联以后继续输出什么。这次整理时，完整程序能在一套配置下编译通过，换成目标芯片的容量限制，却连链接都过不了。</p>
+<h2 id="一块转接板需要做什么"><a href="#一块转接板需要做什么" class="headerlink" title="一块转接板需要做什么"></a>一块转接板需要做什么</h2><p>控制信号的路径是：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">遥控器 → ELRS 无线链路 → 接收机</span><br><span class="line">                          │</span><br><span class="line">                          │ CRSF 串口数据</span><br><span class="line">                          ▼</span><br><span class="line">                     CRSF2PWM 转接板</span><br><span class="line">                          │</span><br><span class="line">                          ├─ PWM → 舵机</span><br><span class="line">                          └─ PWM → 电调</span><br><span class="line"></span><br><span class="line">电池 → 分压采样 → ADC → CRSF 电池数据帧 → 接收机 → 遥控器</span><br></pre></td></tr></table></figure>
+
+<p>通道数据往下走，电池电压往回传。转接板需要处理的就是这两件事。</p>
+<p>目标主控选的是 PY32F002A，固件基于 AirMCU Arduino 核心。按现有设计说明，板子是 31 mm × 13 mm，四路输出接排针，另外四路留焊盘。</p>
+<p>读源码可以从下面几个文件入手：</p>
+<table>
+<thead>
+<tr>
+<th>文件</th>
+<th>负责什么</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>crsf2pwm.ino</code></td>
+<td>通道映射、PWM、失控动作和电压采样</td>
+</tr>
+<tr>
+<td><code>CrsfSerial.cpp</code></td>
+<td>串口收包、CRC 校验、帧分发和连接超时</td>
+</tr>
+<tr>
+<td><code>crsf_protocol.h</code></td>
+<td>帧类型、数据结构、通道常量和字节序转换</td>
+</tr>
+<tr>
+<td><code>target.h</code></td>
+<td>引脚、LED 极性和电阻分压参数</td>
+</tr>
+<tr>
+<td><code>median.h</code></td>
+<td>电压采样的去极值平均滤波</td>
+</tr>
+</tbody></table>
+<p>其中 <code>crsf2pwm.ino</code> 和 <code>CrsfSerial.cpp</code> 是主线。前者决定收到通道值以后做什么，后者负责把通道值从串口里取出来。</p>
+<h2 id="CRSF-解析：先从字节流中找到完整的一帧"><a href="#CRSF-解析：先从字节流中找到完整的一帧" class="headerlink" title="CRSF 解析：先从字节流中找到完整的一帧"></a>CRSF 解析：先从字节流中找到完整的一帧</h2><p>工程里的 CRSF 串口设为 420000 baud，接收机端需要使用匹配的配置。</p>
+<p>普通 CRSF 帧在本项目中的布局是：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[地址 / 同步字节] [长度] [类型] [Payload] [CRC8]</span><br><span class="line">       1 B        1 B    1 B     N B      1 B</span><br></pre></td></tr></table></figure>
+
+<p>长度字段只统计它后面的内容：一个类型字节、N 个数据字节，再加一个 CRC。因此 <code>长度 = N + 2</code>，整帧是 <code>N + 4</code> 字节。CRC 从类型开始算，覆盖到 Payload 末尾，多项式为 <code>0xD5</code>。协议原文 <a target="_blank" rel="noopener" href="https://github.com/tbs-fpv/tbs-crsf-spec/blob/main/crsf.md#frame-construction">TBS 的帧格式说明</a>。</p>
+<p>格式本身不难，麻烦在于 UART 只管送字节。假设接收机已经在发数据，MCU 这时才启动，读到的第一个字节完全可能落在 Payload 中间。直接把它当帧头，后面的长度和类型就全错了。</p>
+<p>所以 <code>handleByteReceived()</code> 会一边收，一边尝试找边界。缓冲区里至少有两个字节时，先把第二个字节当作候选长度；长度不在 3～62 之间，就扔掉最前面的一个字节，再试一次。</p>
+<p>要等到缓冲区凑够 <code>长度 + 2</code> 字节，再计算 CRC。校验通过才处理整帧并把它移走；校验失败，同样只移动一个字节，继续找。</p>
+<p>如果收到一半就没动静了，超过 100 ms 没有新字节，程序会清掉残留数据，避免一直守着一个凑不齐的包。</p>
+<p>普通 <code>0x16</code> 通道帧需要 22 字节通道数据，而代码识别到类型后，就直接按结构体读取了。CRC 正确只说明校验值对得上，不能保证 Payload 足够长；一个过短但 CRC 正确的帧，仍可能让解析器读到缓冲区里的旧内容。后续要在帧分发之前，按类型再检查一次长度。</p>
+<h2 id="从-11-bit-通道值转换成微秒"><a href="#从-11-bit-通道值转换成微秒" class="headerlink" title="从 11 bit 通道值转换成微秒"></a>从 11 bit 通道值转换成微秒</h2><p>本项目处理的 <code>0x16</code> 通道帧将 16 个通道打包在一起，每个通道占 11 bit：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">16 × 11 bit = 176 bit = 22 byte</span><br></pre></td></tr></table></figure>
+
+<p>固件会把 16 路都解出来，再选八路输出。这里用了 packed 位域结构体，写起来比较短，不过换编译器时要留意位域布局。希望把字节解释写得更明确，也可以用移位和掩码逐个取值。</p>
+<p>通道值转换采用下面这段代码：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">_channels[i] = <span class="built_in">map</span>(</span><br><span class="line">    _channels[i],</span><br><span class="line">    CRSF_CHANNEL_VALUE_1000,  <span class="comment">// 191</span></span><br><span class="line">    CRSF_CHANNEL_VALUE_2000,  <span class="comment">// 1792</span></span><br><span class="line">    <span class="number">1000</span>,</span><br><span class="line">    <span class="number">2000</span></span><br><span class="line">);</span><br></pre></td></tr></table></figure>
+
+<p>也就是把原始值 191～1792 映射为 1000～2000 µs；992 对应约 1500 µs。这些端点也能在 <a target="_blank" rel="noopener" href="https://github.com/ExpressLRS/ExpressLRS/blob/master/src/include/crsf_protocol.h">ExpressLRS 的协议定义</a>中找到。</p>
+<p><code>map()</code> 在这里没有限幅。给它一个超过端点的输入，它会沿着这条直线继续算，输出也就可能超出 1000～2000 µs。如果要保留扩展行程，这样做有用；如果设备只接受某个范围，就得在输出前另外限制。</p>
+<p>输出通道与输入通道的关系单独放在数组里：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">constexpr</span> <span class="type">int</span> OUTPUT_MAP[NUM_OUTPUTS] = &#123;</span><br><span class="line">    <span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>, <span class="number">7</span>, <span class="number">8</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>想把第一路反过来，可以把第一个元素改成 <code>-1</code>。代码遇到负数时，会取对应通道再做一次镜像：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">usOutput = <span class="number">3000</span> - usOutput;</span><br></pre></td></tr></table></figure>
+
+<p>这样 1000 µs 就变成 2000 µs，中位 1500 µs 不动。换通道、改方向都可以留在这个数组里处理，不用再动解包部分。不过配置值只能用 <code>±1</code> 到 <code>±16</code>，目前代码没有检查越界，也不能填 0。</p>
+<h2 id="八路-PWM-配置"><a href="#八路-PWM-配置" class="headerlink" title="八路 PWM 配置"></a>八路 PWM 配置</h2><p>固件设置的 PWM 频率是 50 Hz，对应周期 20 ms。以 1500 µs 脉宽为例，每个周期内高电平持续 1.5 ms，占空比为 7.5%。</p>
+<p>讨论舵机位置时，我觉得直接说“输出 1500 µs”更方便，不必每次再换算占空比。代码也是这么做的：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">pwm_start</span>(</span><br><span class="line">    OUTPUT_PINS[servo],</span><br><span class="line">    PWM_FREQ_HZ,</span><br><span class="line">    usec,</span><br><span class="line">    MICROSEC_COMPARE_FORMAT</span><br><span class="line">);</span><br></pre></td></tr></table></figure>
+
+
+<p>源码配置的引脚如下，RX／TX 均以 MCU 为参照：</p>
+<table>
+<thead>
+<tr>
+<th>功能</th>
+<th>配置引脚</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>CRSF RX &#x2F; TX</td>
+<td>PF1 &#x2F; PA0</td>
+</tr>
+<tr>
+<td>状态 LED</td>
+<td>PB2，低电平亮</td>
+</tr>
+<tr>
+<td>电池 ADC</td>
+<td>PA7</td>
+</tr>
+<tr>
+<td>PWM 1～4</td>
+<td>PA5、PA6、PB0、PB1</td>
+</tr>
+<tr>
+<td>PWM 5～8</td>
+<td>PB3、PF0、PA1、PB6</td>
+</tr>
+</tbody></table>
+<p>接线时是接收机 TX 接 MCU RX，MCU TX 接接收机 RX，并共地。</p>
+<h2 id="失控保护"><a href="#失控保护" class="headerlink" title="失控保护"></a>失控保护</h2><p>如果最后收到的命令是加油门，之后串口断了，总不能一直照着最后一个数输出。这也是为什么失控处理要跟着通道解析一起看。</p>
+<p>代码用 <code>_lastChannelsPacket</code> 记住最近一次通道帧的时间。连接建立后，超过 300 ms 没有新通道帧，就触发失控回调。其他类型的帧不会刷新这个时间戳，串口上还有字节也没用，得有新的通道数据才算。</p>
+<p>默认失控配置为：</p>
+<table>
+<thead>
+<tr>
+<th>输出通道</th>
+<th>失控动作</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>输出 1500 µs</td>
+</tr>
+<tr>
+<td>2</td>
+<td>输出 1500 µs</td>
+</tr>
+<tr>
+<td>3</td>
+<td>输出 988 µs</td>
+</tr>
+<tr>
+<td>4</td>
+<td>输出 1500 µs</td>
+</tr>
+<tr>
+<td>5～7</td>
+<td>保持最后一次脉宽</td>
+</tr>
+<tr>
+<td>8</td>
+<td>停止脉冲</td>
+</tr>
+</tbody></table>
+<p>固定值比较直观，就是主动给设备一个位置或油门指令。<code>fsaHold</code> 则什么也不改，让 PWM 继续保持最后的脉宽。停止脉冲走的是另一条路径：调用 <code>pwm_stop()</code>，再把引脚改成下拉输入。</p>
+<p>固件等第一帧通道数据来了，才初始化 PWM，这样不会在启动时先发出一组随手设定的值。不过，失控回调只会在已经建立过连接之后触发。如果上电以后始终收不到数据，程序走的并不是“连接后失联”那条路径，这两种情况要分开测。</p>
+<p>接收机的行为也会影响结果。假如无线已经断了，接收机却还在不断发送保持值通道帧，转接板就会觉得数据仍在更新。后续实测时，关闭遥控器、给接收机断电、拔掉串口线，再重新连接，都需要试一遍，才能知道两边的失控设置是否配合。</p>
+<h2 id="电压回传"><a href="#电压回传" class="headerlink" title="电压回传"></a>电压回传</h2><p>电压回传走的是“分压 → ADC → 滤波 → 换算 → CRSF 打包”这条路径。</p>
+<p>ADC 配置为 12 bit，换算时使用 0～4095。代码里的 <code>VBAT_INTERVAL</code> 是 500，<code>VBAT_SMOOTH</code> 是 5，也就是每隔至少 100 ms 采一次，攒够五个样本再回传，理想情况下约 2 Hz。</p>
+<p>实际算法是：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">滤波结果 =（五个样本之和 − 最大值 − 最小值）÷ 3</span><br></pre></td></tr></table></figure>
+
+<p>五个数，扔掉最大的和最小的，剩下三个求平均。这样实现起来不用排序，也能减弱孤立尖峰的影响。只是读数更平稳，不代表读数就准确了，参考电压和分压系数还是得算对。</p>
+<p>电阻参数目前为 <code>R1 = 1000</code>、<code>R2 = 100</code>，R1 在上、R2 在下时，电池电压恢复倍数为：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">(R1 + R2) / R2 = 11</span><br><span class="line"></span><br><span class="line">Vbat = ADC / 4095 × Vref × 11</span><br></pre></td></tr></table></figure>
+
+<p>这儿很容易顺手写成乘 10。电阻比是 10:1，但从下方电阻两端的电压还原到电池电压，要乘的是 11。</p>
+<p>本项目的 <code>crsf_protocol.h</code> 将电池电压字段定义为 <code>V × 10</code>，也就是按 0.1 V 编码。如果以这一约定计算，并假设 ADC 参考电压为 3.3 V、ADC 读数为 1000：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Vbat ≈ 1000 / 4095 × 3.3 × 11 ≈ 8.86 V</span><br><span class="line">回传整数 ≈ 89</span><br></pre></td></tr></table></figure>
+
+<p>这里暂用 3.3 V 演算，实际参考电压要按板子确认。</p>
+<p>当前代码使用的表达式是：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">500U</span> * adc * (VBAT_R1 + VBAT_R2)</span><br><span class="line">    / VBAT_R2 / ((<span class="number">1</span> &lt;&lt; <span class="number">12</span>) - <span class="number">1</span>) * VBAT_SCALE;</span><br></pre></td></tr></table></figure>
+
+<p><code>VBAT_SCALE</code> 还设了一个 1.1 的修正系数。问题在于，即便参考电压按 5 V 算，输出按 <code>V × 10</code> 编码，前面的系数也应该是 <code>5 × 10 = 50</code>，这里却写成了 <code>500</code>。这一处的单位没有对上，要拿实际输入电压和遥控器显示一起核对，现阶段不能把回传值当成已经校准好的读数。</p>
+<p>这也是我更愿意把单位写进变量名的原因。看见 <code>battery_mV</code>，至少知道它表示毫伏，不用再猜一个叫 <code>value</code> 的整数究竟放大了多少倍。换算可以拆成下面这样，这段目前只是示意，还没有替换进固件：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 示意：vref_mV 必须使用已确认的 ADC 参考电压。</span></span><br><span class="line"><span class="type">uint32_t</span> battery_mV =</span><br><span class="line">    (<span class="type">uint64_t</span>)adc * vref_mV * (R1 + R2) / (<span class="number">4095ULL</span> * R2);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 按本项目 V × 10 的字段约定，100 mV 为一个计数。</span></span><br><span class="line"><span class="type">uint16_t</span> voltage_dV = (battery_mV + <span class="number">50</span>) / <span class="number">100</span>;</span><br></pre></td></tr></table></figure>
+
+<p>这里先用 64 bit 容纳乘积，是否值得在小 MCU 上这么写，还要看编译后的体积。数值算好以后，打包前再用 <code>htobe16()</code> 转成大端。这样拆开，电压不对就查换算，字节不对就查打包，比盯着一长串乘除法猜要轻松一些。</p>
+<p>复现构建可以按以下顺序进行。先安装 Arduino CLI，再执行：</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">git <span class="built_in">clone</span> https://github.com/neiaHsing/crsf2pwm.git</span><br><span class="line"><span class="built_in">cd</span> crsf2pwm</span><br><span class="line"></span><br><span class="line">bash scripts/setup-arduino.sh</span><br><span class="line">bash scripts/build.sh led</span><br><span class="line">bash scripts/build.sh firmware</span><br><span class="line">bash scripts/build.sh py32-check</span><br></pre></td></tr></table></figure>
+
+<p>跑到最后一条，当前代码和工具链会报容量溢出，就是前面那组结果。</p>
+<p>下载 LED 示例时，使用 Arduino 生成固件，再由 pyOCD 经 DAPLink／SWD 写入。安装 pyOCD 并准备好设备包后：</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">pyocd list</span><br><span class="line">bash scripts/flash-led.sh /path/to/Puya.PY32F0xx_DFP.1.2.6.pack YOUR_PROBE_UID</span><br></pre></td></tr></table></figure>
+
+<p>设备包路径和探针 UID 要换成自己的。脚本按 <code>PY32F002Ax5</code> 下载，SWD 频率是 100 kHz，写入的是 LED 示例，会覆盖相应 Flash 页。工具链路径等配置放在仓库的<a target="_blank" rel="noopener" href="https://github.com/neiaHsing/crsf2pwm/blob/main/docs/build-and-flash.md">构建与烧录说明</a>里。</p>
+<p>源码与后续更新：<a target="_blank" rel="noopener" href="https://github.com/neiaHsing/crsf2pwm">CRSF2PWM 项目仓库</a>。</p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://www.xiaoeni.cc">Xiaoeni</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://www.xiaoeni.cc/2026/09/25/%E5%81%9A%E4%B8%80%E5%9D%97%20CRSF%20%E8%BD%AC%20PWM%20%E5%B0%8F%E6%9D%BF-1790329128057/">https://www.xiaoeni.cc/2026/09/25/%E5%81%9A%E4%B8%80%E5%9D%97%20CRSF%20%E8%BD%AC%20PWM%20%E5%B0%8F%E6%9D%BF-1790329128057/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://www.xiaoeni.cc" target="_blank">Xiaoeni's Blog</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E5%B5%8C%E5%85%A5%E5%BC%8F/">嵌入式</a><a class="post-meta__tags" href="/tags/ELRS/">ELRS</a><a class="post-meta__tags" href="/tags/CRSF/">CRSF</a><a class="post-meta__tags" href="/tags/PWM/">PWM</a><a class="post-meta__tags" href="/tags/Arduino/">Arduino</a></div><div class="post_share"><div class="social-share" data-image="https://s2.loli.net/2023/11/17/4iJRQMFrfAGenSo.jpg" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><div class="next-post pull-full"><a href="/2026/08/02/motivation-of-kindness/" title="善良的动机-motivation of kindness"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">善良的动机-motivation of kindness</div></div></a></div></nav><hr class="custom-hr"/><div id="post-comment"><div class="comment-head"><div class="comment-headline"><i class="fas fa-comments fa-fw"></i><span> 评论</span></div></div><div class="comment-wrap"><div><div id="twikoo-wrap"></div></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="https://s2.loli.net/2023/11/17/4iJRQMFrfAGenSo.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">Xiaoeni</div><div class="author-info__description">Xiaoeni 的个人博客，记录旅行见闻、城市观察、科技折腾与日常思考。</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">49</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">5</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">1</div></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">WeiXin:Shuykaru</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%81%9A%E4%B8%80%E5%9D%97-CRSF-%E8%BD%AC-PWM-%E5%B0%8F%E6%9D%BF"><span class="toc-text">做一块 CRSF 转 PWM 小板</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E5%9D%97%E8%BD%AC%E6%8E%A5%E6%9D%BF%E9%9C%80%E8%A6%81%E5%81%9A%E4%BB%80%E4%B9%88"><span class="toc-text">一块转接板需要做什么</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#CRSF-%E8%A7%A3%E6%9E%90%EF%BC%9A%E5%85%88%E4%BB%8E%E5%AD%97%E8%8A%82%E6%B5%81%E4%B8%AD%E6%89%BE%E5%88%B0%E5%AE%8C%E6%95%B4%E7%9A%84%E4%B8%80%E5%B8%A7"><span class="toc-text">CRSF 解析：先从字节流中找到完整的一帧</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BB%8E-11-bit-%E9%80%9A%E9%81%93%E5%80%BC%E8%BD%AC%E6%8D%A2%E6%88%90%E5%BE%AE%E7%A7%92"><span class="toc-text">从 11 bit 通道值转换成微秒</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AB%E8%B7%AF-PWM-%E9%85%8D%E7%BD%AE"><span class="toc-text">八路 PWM 配置</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%A4%B1%E6%8E%A7%E4%BF%9D%E6%8A%A4"><span class="toc-text">失控保护</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%94%B5%E5%8E%8B%E5%9B%9E%E4%BC%A0"><span class="toc-text">电压回传</span></a></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/09/25/%E5%81%9A%E4%B8%80%E5%9D%97%20CRSF%20%E8%BD%AC%20PWM%20%E5%B0%8F%E6%9D%BF-1790329128057/" title="做一块 CRSF 转 PWM 小板">做一块 CRSF 转 PWM 小板</a><time datetime="2026-09-25T09:37:50.000Z" title="发表于 2026-09-25 17:37:50">2026-09-25</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/08/02/motivation-of-kindness/" title="善良的动机-motivation of kindness">善良的动机-motivation of kindness</a><time datetime="2026-08-02T08:23:23.000Z" title="发表于 2026-08-02 16:23:23">2026-08-02</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/10/29/%E6%B8%B8%E8%AE%B0-%E9%99%95%E8%A5%BF%E8%A5%BF%E5%AE%89%20/" title="游记(陕西西安)">游记(陕西西安)</a><time datetime="2025-10-29T16:43:34.000Z" title="发表于 2025-10-30 00:43:34">2025-10-30</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/08/10/%E6%B8%B8%E8%AE%B0-%E7%A6%8F%E5%BB%BA%E8%8E%86%E7%94%B0/" title="游记(福建莆田)">游记(福建莆田)</a><time datetime="2025-08-10T09:01:34.000Z" title="发表于 2025-08-10 17:01:34">2025-08-10</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/08/07/%E6%B8%B8%E8%AE%B0-%E7%B2%A4%E4%B8%9C-%E5%8D%97%E5%AE%81-%E9%A6%99%E6%B8%AF/" title="游记(粤东-南宁-香港)">游记(粤东-南宁-香港)</a><time datetime="2025-08-07T14:32:33.000Z" title="发表于 2025-08-07 22:32:33">2025-08-07</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2021 - 2026 By Xiaoeni</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="translateLink" type="button" title="简繁转换">繁</button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><a id="to_comment" href="#post-comment" title="直达评论"><i class="fas fa-comments"></i></a><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="/js/tw_cn.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.umd.min.js"></script><div class="js-pjax"><script>(() => {
+  const init = () => {
+    twikoo.init(Object.assign({
+      el: '#twikoo-wrap',
+      envId: 'https://twikoo-git-main-1322611877s-projects.vercel.app',
+      region: 'ap-shanghai',
+      onCommentLoaded: () => {
+        btf.loadLightbox(document.querySelectorAll('#twikoo .tk-content img:not(.tk-owo-emotion)'))
+      }
+    }, null))
+  }
+
+  const loadTwikoo = () => {
+    if (typeof twikoo === 'object') setTimeout(init,0)
+    else getScript('https://cdn.jsdelivr.net/npm/twikoo/dist/twikoo.all.min.js').then(init)
+  }
+
+  const getCount = () => {
+    const countELement = document.getElementById('twikoo-count')
+    if(!countELement) return
+    twikoo.getCommentsCount({
+      envId: 'https://twikoo-git-main-1322611877s-projects.vercel.app',
+      region: 'ap-shanghai',
+      urls: [window.location.pathname],
+      includeReply: false
+    }).then(res => {
+      countELement.textContent = res[0].count
+    }).catch(err => {
+      console.error(err)
+    })
+  }
+
+  if ('Twikoo' === 'Twikoo' || !false) {
+    if (false) btf.loadComment(document.getElementById('twikoo-wrap'), loadTwikoo)
+    else {
+      loadTwikoo()
+      GLOBAL_CONFIG_SITE.isPost && getCount()
+    }
+  } else {
+    window.loadOtherComment = loadTwikoo
+  }
+})()</script></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
